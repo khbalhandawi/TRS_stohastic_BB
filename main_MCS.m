@@ -74,5 +74,32 @@ index = 0; % Initialize counter
 param = {index,lob_v,upb_v,lob_p,upb_p,shroud_width,T_melt};
 
 %% Blackbox call
-f = TRS_BB(x0,param)
+n_var = 2; n_samples = 1000; n_steps = 5;
+var_DOE = linspace(0,1,n_steps);
+
+for n = 1:1:n_steps
+    
+    DOE_filename = ['DOE_R',num2str(n),'.log']; % Purge out SBCE log file
+    fileID_run = fopen(['MCS_results/',DOE_filename],'w');
+    fclose(fileID_run);
+    
+    x0(n_var) = var_DOE(n);
+    
+    MCS_runs = zeros(n_samples,1);
+    for m = 1:1:n_samples
+        f = TRS_BB(x0,param);
+        MCS_runs(m) = f(1);
+        
+        fileID_run = fopen(['MCS_results/',DOE_filename],'a');
+        Net_results = sprintf('%f,' , [x0 f]);
+        Net_results = Net_results(1:end-1);% strip final comma
+        fprintf(fileID_run, '%i,%s\n', [m,Net_results]);
+        fclose('all');
+        
+    end
+
+    mat_filename = ['DOE_R',num2str(n),'.mat']; % Purge out SBCE log file
+    save(['MCS_results/',mat_filename], 'MCS_runs', 'x0' )
+
+end
     
