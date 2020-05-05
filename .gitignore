@@ -1,0 +1,8 @@
+
+*.pyc
+flag_predict_received
+*.pdf
+*.log
+*.pkl
+*.txt
+*.sgt
