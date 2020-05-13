@@ -74,5 +74,6 @@ index = 0; % Initialize counter
 param = {index,lob_v,upb_v,lob_p,upb_p,shroud_width,T_melt};
 
 %% Blackbox call
-f = TRS_BB(x0,param)
+% f = TRS_BB(x0,param)
+f = TRS_BB_simple(x0)
     
