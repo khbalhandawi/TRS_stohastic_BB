@@ -20,6 +20,7 @@ function [f] = TRS_BB_simple(x)
     lob = [lob_v lob_p]'; upb = [upb_v upb_p]';  
     
     %% Scale variables
+    x = x';
     x = scaling(x, lob_v, upb_v, 2); % Normalize variables for optimization
     
     P_random = rand(size(lob_p));

@@ -74,32 +74,22 @@ index = 0; % Initialize counter
 param = {index,lob_v,upb_v,lob_p,upb_p,shroud_width,T_melt};
 
 %% Blackbox call
-n_var = 3; n_samples = 1000; n_steps = 5;
-var_DOE = linspace(0,1,n_steps);
+% f = TRS_BB(x0,param)
+f = TRS_BB_simple(x0)
 
-for n = 1:1:n_steps
-    
-    DOE_filename = ['DOE_R',num2str(n),'.log']; % Purge out SBCE log file
-    fileID_run = fopen(['MCS_results/',DOE_filename],'w');
-    fclose(fileID_run);
-    
-    x0(n_var) = var_DOE(n);
-    
-    MCS_runs = zeros(n_samples,1);
-    for m = 1:1:n_samples
-        f = TRS_BB(x0,param);
-        MCS_runs(m) = f(1);
-        
-        fileID_run = fopen(['MCS_results/',DOE_filename],'a');
-        Net_results = sprintf('%f,' , [x0 f]);
-        Net_results = Net_results(1:end-1);% strip final comma
-        fprintf(fileID_run, '%i,%s\n', [m,Net_results]);
-        fclose('all');
-        
-    end
+opts = nomadset('display_degree',2,'max_bb_eval',2000,'min_mesh_size','1e-6','bb_output_type','OBJ PB'); 
+% Start optimization
+[x_opt,f_opt] = nomad(@TRS_BB_simple,x0,lb_n,ub_n,opts);
 
-    mat_filename = ['DOE_R',num2str(n),'.mat']; % Purge out SBCE log file
-    save(['MCS_results/',mat_filename], 'MCS_runs', 'x0' )
+%% Visualize results
+% RMSF(x_opt',param)
 
-end
+x0 = scaling(x0,lob_v,upb_v,2);
+x_opt = scaling(x_opt',lob_v,upb_v,2);
+
+fprintf('================================\n')
+fprintf('SOLUTION\n')
+fprintf('The optimizer is at x = [%f, %f, %f]\n',x_opt(1),x_opt(2),x_opt(3))
+fprintf('The optimum function value is f = %f \n',f_opt)
+fprintf('================================\n')
     

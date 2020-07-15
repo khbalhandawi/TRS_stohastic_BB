@@ -135,7 +135,7 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
                       discrete = False, min_bin_width = 0, 
                       fig_swept = None, run_label = 'PDF', color = u'b',
                       dataXLim = None, dataYLim = None):
-
+    
     mean_data = np.mean(data)
     std_data = np.std(data)
 
@@ -257,9 +257,32 @@ if __name__ == '__main__':
                        [-100.0         , 100.0   ], # T3
                        [-100.0         , 100.0   ]]) # T4
 
-    n_var = 2; n_samples = 1000; n_steps = 5
-    var_DOE = np.linspace(0.0,1.0,n_steps)
-    var_DOE = scaling(var_DOE,bounds[n_var,0],bounds[n_var,1],2)
+    #===================================================================#
+    # Points to plot
+    opt_1 = np.array([0.00007426524509085878, 0.42380805903074963981, 0.02843359294084374031])
+    opt_1 = scaling(opt_1, -1*np.ones(3), 1*np.ones(3), 1) # Normalize variables between -1 and 1 back to 0 and 1
+    opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
+    g_lin_1 = opt_1_unscaled[0] + opt_1_unscaled[2] - 201
+
+    opt_2 = np.array([0.06624374389648435280, 0.48429003953933713600, 0.14601796466158700749])
+    opt_2 = scaling(opt_2, -1*np.ones(3), 1*np.ones(3), 1) # Normalize variables between -1 and 1 back to 0 and 1
+    opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
+    g_lin_2 = opt_2_unscaled[0] + opt_2_unscaled[2] - 201
+
+    opt_3 = np.array([0.340000000000000, 0.740000000000000, 0.730000000000000])
+    opt_3_unscaled = scaling(opt_3, bounds[:3,0], bounds[:3,1], 2)
+    g_lin_3 = opt_3_unscaled[0] + opt_3_unscaled[2] - 201
+
+    print('point #1: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2],g_lin_1))
+    print('point #2: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2],g_lin_2))
+    print('point #3: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2],g_lin_3))
+    
+    points = np.vstack((opt_1,opt_2,opt_3))
+
+    labels = ['$\mathtt{StoMADS-PB}$ candidate solution 1 $\mathbf{x}_{\mathrm{scaled}} = [0.50 ~ 0.71 ~ 0.51]^{\mathrm{T}}$',
+              '$\mathtt{StoMADS-PB}$ candidate solution 2 $\mathbf{x}_{\mathrm{scaled}} = [0.53 ~ 0.74 ~ 0.57]^{\mathrm{T}}$',
+              '$\mathtt{NOMAD}$ candidate solution 3 $\mathbf{x}_{\mathrm{scaled}} = [0.34~0.74~0.73]^{\mathrm{T}}$']
+    #===================================================================#
 
     same_axis = True
     if same_axis:
@@ -283,14 +306,8 @@ if __name__ == '__main__':
     mpl.rcParams['font.family'] = 'serif'
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
 
-    for var in var_DOE:
+    for point,legend_label in zip(points,labels):
 
-        legend_labels = ['Axial position ($x_1$) = %f mm' %(var),
-                         'Thickness ($x_2$) = %f mm' %(var),
-                         'Width ($x_3$) = %f mm' %(var)]
-
-        legend_label = legend_labels[n_var] 
-        
         filename = 'MCS_results/DOE_R%i.mat' %(run+1)
         mat = scipy.io.loadmat(filename) # get optitrack data
         data = mat['MCS_runs']
@@ -326,6 +343,6 @@ if __name__ == '__main__':
         pickle.dump(std_nsafety,fid)
 
     if same_axis:
-        fig_nsafety.savefig('MCS_results/PDF_%s.pdf' %('nsafety'), 
+        fig_nsafety.savefig('MCS_results/PDF_%s.pdf' %('infections'), 
                                 format='pdf', dpi=100,bbox_inches='tight')
         plt.show()

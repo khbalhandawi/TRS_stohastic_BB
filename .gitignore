@@ -6,3 +6,4 @@ flag_predict_received
 *.pkl
 *.txt
 *.sgt
+*.asv

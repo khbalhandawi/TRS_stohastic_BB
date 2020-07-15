@@ -74,16 +74,28 @@ index = 0; % Initialize counter
 param = {index,lob_v,upb_v,lob_p,upb_p,shroud_width,T_melt};
 
 %% Blackbox call
-n_var = 3; n_samples = 1000; n_steps = 5;
-var_DOE = linspace(0,1,n_steps);
+opt_1 = [0.00007426524509085878  0.42380805903074963981  0.02843359294084374031];
+opt_1 = scaling(opt_1, -1*ones(1,3), 1*ones(1,3), 1); % Normalize variables between -1 and 1 back to 0 and 1
 
-for n = 1:1:n_steps
+opt_2 = [0.06624374389648435280  0.48429003953933713600  0.14601796466158700749];
+opt_2 = scaling(opt_2, -1*ones(1,3), 1*ones(1,3), 1); % Normalize variables between -1 and 1 back to 0 and 1
+
+opt_3 = [0.340000000000000  0.740000000000000  0.730000000000000];
+
+points = [opt_1; opt_2; opt_3];
+
+n_samples = 1000;
+n_steps = size(points,1);
+
+n_point = 1; % number of points sampled
+
+for n = n_point:1:n_steps
     
     DOE_filename = ['DOE_R',num2str(n),'.log']; % Purge out SBCE log file
     fileID_run = fopen(['MCS_results/',DOE_filename],'w');
     fclose(fileID_run);
     
-    x0(n_var) = var_DOE(n);
+    x0 = points(n,:);
     
     MCS_runs = zeros(n_samples,1);
     for m = 1:1:n_samples
