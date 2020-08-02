@@ -74,15 +74,12 @@ index = 0; % Initialize counter
 param = {index,lob_v,upb_v,lob_p,upb_p,shroud_width,T_melt};
 
 %% Blackbox call
-opt_1 = [0.00007426524509085878  0.42380805903074963981  0.02843359294084374031];
-opt_1 = scaling(opt_1, -1*ones(1,3), 1*ones(1,3), 1); % Normalize variables between -1 and 1 back to 0 and 1
+opt_1 = [0.359651015197352, 0.471324654138228, 0.492508007612736];
+opt_2 = [0.362162859400232, 0.726644087036705, 0.439795393281029];
+opt_3 = [0.359651015197352, 0.471324654138228, 0.492508007612736];
+opt_4 = [0.340000000000000, 0.740000000000000, 0.730000000000000];
 
-opt_2 = [0.06624374389648435280  0.48429003953933713600  0.14601796466158700749];
-opt_2 = scaling(opt_2, -1*ones(1,3), 1*ones(1,3), 1); % Normalize variables between -1 and 1 back to 0 and 1
-
-opt_3 = [0.340000000000000  0.740000000000000  0.730000000000000];
-
-points = [opt_1; opt_2; opt_3];
+points = [opt_1; opt_2; opt_3; opt_4];
 
 n_samples = 1000;
 n_steps = size(points,1);
