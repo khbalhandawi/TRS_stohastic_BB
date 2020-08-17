@@ -8,6 +8,7 @@ import warnings
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib import rcParams
+import matplotlib.patches as patches
 import pickle
 
 #==============================================================================#
@@ -134,10 +135,16 @@ def make_pdf(dist, params, size=10000):
 def plot_distribution(data, fun_name, label_name, n_bins, run, 
                       discrete = False, min_bin_width = 0, 
                       fig_swept = None, run_label = 'PDF', color = u'b',
-                      dataXLim = None, dataYLim = None):
+                      dataXLim = None, dataYLim = None, constraint = None,
+                      fit_distribution = True, handles = [], labels = []):
     
-    mean_data = np.mean(data)
-    std_data = np.std(data)
+    if constraint is not None:
+        data_cstr = [d - constraint for d in data]
+        mean_data = np.mean(data_cstr)
+        std_data = np.std(data_cstr)
+    else:
+        mean_data = np.mean(data)
+        std_data = np.std(data)
 
     # Plot raw data
     fig0 = plt.figure(figsize=(6,5))
@@ -189,24 +196,35 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
     else:
         data_bins = n_bins
 
-    best_fit_name, best_fit_params, best_10_fits = best_fit_distribution(data, data_bins, ax)
+    # Fit and plot distribution
+    if fit_distribution:
 
-    best_dist = getattr(st, best_fit_name)
-    print('Best fit: %s' %(best_fit_name.upper()) )
-    # Make PDF with best params 
-    pdf = make_pdf(best_dist, best_fit_params)
-    pdf.plot(lw=2, color = color, label=run_label, legend=True, ax=ax2)
+        best_fit_name, best_fit_params, best_10_fits = best_fit_distribution(data, data_bins, ax)
 
-    param_names = (best_dist.shapes + ', loc, scale').split(', ') if best_dist.shapes else ['loc', 'scale']
-    param_str = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(param_names, best_fit_params)])
-    dist_str = '{}({})'.format(best_fit_name, param_str)
+        best_dist = getattr(st, best_fit_name)
+        print('Best fit: %s' %(best_fit_name.upper()) )
+        # Make PDF with best params 
+        pdf = make_pdf(best_dist, best_fit_params)
+        pdf.plot(lw=2, color = color, label=run_label, legend=True, ax=ax2)
+
+        param_names = (best_dist.shapes + ', loc, scale').split(', ') if best_dist.shapes else ['loc', 'scale']
+        param_str = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(param_names, best_fit_params)])
+        dist_str = '{}({})'.format(best_fit_name, param_str)
+
+        handles = []; labels = []
+    else:
+        lgd = ax2.legend(handles, labels, fontsize = 9.0)
 
     if discrete:
         # discrete bin numbers
-        ax2.hist(data, bins, color = color, alpha=0.5, label = 'data', density=True)
+        ax2.hist(data, bins, color = color, alpha=0.5, density=True)
     else:
-        ax2.hist(data, bins = n_bins, color = color, alpha=0.5, label = 'data', density=True)
-    
+        ax2.hist(data, bins = n_bins, color = color, alpha=0.5, density=True)
+
+    # plot constraint limits
+    if constraint is not None:
+        ax2.axvline(x=constraint, linestyle='--', linewidth='2', color='k')
+
     # Save plot limits
     if dataYLim is None and dataXLim is None:
         dataYLim = ax2.get_ylim()
@@ -254,6 +272,10 @@ if __name__ == '__main__':
                        [-100.0         , 100.0   ], # T2
                        [-100.0         , 100.0   ], # T3
                        [-100.0         , 100.0   ]]) # T4
+
+
+    fit_cond = False # Do not fit data
+    run = 0 # starting point
 
     #===================================================================#
     # R0 opts (old algorithm)
@@ -312,36 +334,36 @@ if __name__ == '__main__':
     #===================================================================#
     # R0 & R1 opts
     
-    # # Points to plot
-    # opt_1 = np.array([0.00007426524509085878, 0.42380805903074963981, 0.02843359294084374031])
-    # opt_1 = scaling(opt_1, -1*np.ones(3), 1*np.ones(3), 1) # Normalize variables between -1 and 1 back to 0 and 1
-    # opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
-    # g_lin_1 = opt_1_unscaled[0] + opt_1_unscaled[2] - 201
+    # Points to plot
+    opt_1 = np.array([0.00007426524509085878, 0.42380805903074963981, 0.02843359294084374031])
+    opt_1 = scaling(opt_1, -1*np.ones(3), 1*np.ones(3), 1) # Normalize variables between -1 and 1 back to 0 and 1
+    opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
+    g_lin_1 = opt_1_unscaled[0] + opt_1_unscaled[2] - 201
 
-    # opt_2 = np.array([0.06624374389648435280, 0.48429003953933713600, 0.14601796466158700749])
-    # opt_2 = scaling(opt_2, -1*np.ones(3), 1*np.ones(3), 1) # Normalize variables between -1 and 1 back to 0 and 1
-    # opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
-    # g_lin_2 = opt_2_unscaled[0] + opt_2_unscaled[2] - 201
+    opt_2 = np.array([0.06624374389648435280, 0.48429003953933713600, 0.14601796466158700749])
+    opt_2 = scaling(opt_2, -1*np.ones(3), 1*np.ones(3), 1) # Normalize variables between -1 and 1 back to 0 and 1
+    opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
+    g_lin_2 = opt_2_unscaled[0] + opt_2_unscaled[2] - 201
 
-    # opt_3 = np.array([0.359651015197352,  0.471324654138228,  0.492508007612736])
-    # opt_3_unscaled = scaling(opt_3, bounds[:3,0], bounds[:3,1], 2)
-    # g_lin_3 = opt_3_unscaled[0] + opt_3_unscaled[2] - 201
+    opt_3 = np.array([0.359651015197352,  0.471324654138228,  0.492508007612736])
+    opt_3_unscaled = scaling(opt_3, bounds[:3,0], bounds[:3,1], 2)
+    g_lin_3 = opt_3_unscaled[0] + opt_3_unscaled[2] - 201
 
-    # opt_4 = np.array([0.362162859400232, 0.726644087036705, 0.439795393281029])
-    # opt_4_unscaled = scaling(opt_4, bounds[:3,0], bounds[:3,1], 2)
-    # g_lin_4 = opt_4_unscaled[0] + opt_4_unscaled[2] - 201
+    opt_4 = np.array([0.362162859400232, 0.726644087036705, 0.439795393281029])
+    opt_4_unscaled = scaling(opt_4, bounds[:3,0], bounds[:3,1], 2)
+    g_lin_4 = opt_4_unscaled[0] + opt_4_unscaled[2] - 201
 
-    # opt_5 = np.array([0.340000000000000, 0.740000000000000, 0.730000000000000])
-    # opt_5_unscaled = scaling(opt_5, bounds[:3,0], bounds[:3,1], 2)
-    # g_lin_5 = opt_5_unscaled[0] + opt_5_unscaled[2] - 201
+    opt_5 = np.array([0.340000000000000, 0.740000000000000, 0.730000000000000])
+    opt_5_unscaled = scaling(opt_5, bounds[:3,0], bounds[:3,1], 2)
+    g_lin_5 = opt_5_unscaled[0] + opt_5_unscaled[2] - 201
 
-    # print('point #1: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2],g_lin_1))
-    # print('point #2: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2],g_lin_2))
-    # print('point #3: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2],g_lin_3))
-    # print('point #4: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2],g_lin_4))
-    # print('point #5: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2],g_lin_5))
+    print('point #1: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2],g_lin_1))
+    print('point #2: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2],g_lin_2))
+    print('point #3: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2],g_lin_3))
+    print('point #4: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_4_unscaled[0],opt_4_unscaled[1],opt_4_unscaled[2],g_lin_4))
+    print('point #5: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_5_unscaled[0],opt_5_unscaled[1],opt_5_unscaled[2],g_lin_5))
 
-    # points = np.vstack((opt_1,opt_2,opt_3,opt_4,opt_5))
+    points = np.vstack((opt_1,opt_2,opt_3,opt_4,opt_5))
 
     # labels = ['$\mathtt{StoMADS-PB}$ V1, sample rate ($p^k$) = 10: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1[0],opt_1[1],opt_1[2]),
     #           '$\mathtt{StoMADS-PB}$ V1, sample rate ($p^k$) = 10: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2[0],opt_2[1],opt_2[2]),
@@ -349,47 +371,58 @@ if __name__ == '__main__':
     #           '$\mathtt{StoMADS-PB}$ V2, sample rate ($p^k$) = 5: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_4[0],opt_4[1],opt_4[2]),
     #           '$\mathtt{NOMAD}$ solution $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_5[0],opt_5[1],opt_5[2])]
 
+    labels = ['$\mathtt{StoMADS-PB}$ 1: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1[0],opt_1[1],opt_1[2]),
+              '$\mathtt{StoMADS-PB}$ 2: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2[0],opt_2[1],opt_2[2]),
+              '$\mathtt{StoMADS-PB}$ 3: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3[0],opt_3[1],opt_3[2]),
+              '$\mathtt{StoMADS-PB}$ 4: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_4[0],opt_4[1],opt_4[2]),
+              '$\mathtt{NOMAD}$: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_5[0],opt_5[1],opt_5[2])]
+
+
     #===================================================================#
     # Select points
     
-    # Points to plot
-    opt_1 = np.array([0.00007426524509085878, 0.42380805903074963981, 0.02843359294084374031])
-    opt_1 = scaling(opt_1, -1*np.ones(3), 1*np.ones(3), 1) # Normalize variables between -1 and 1 back to 0 and 1
-    opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
-    g_lin_1 = opt_1_unscaled[0] + opt_1_unscaled[2] - 201
+    # # Points to plot
+    # opt_1 = np.array([0.00007426524509085878, 0.42380805903074963981, 0.02843359294084374031])
+    # opt_1 = scaling(opt_1, -1*np.ones(3), 1*np.ones(3), 1) # Normalize variables between -1 and 1 back to 0 and 1
+    # opt_1_unscaled = scaling(opt_1, bounds[:3,0], bounds[:3,1], 2)
+    # g_lin_1 = opt_1_unscaled[0] + opt_1_unscaled[2] - 201
 
-    opt_2 = np.array([0.362162859400232, 0.726644087036705, 0.439795393281029])
-    opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
-    g_lin_2 = opt_2_unscaled[0] + opt_2_unscaled[2] - 201
+    # opt_2 = np.array([0.362162859400232, 0.726644087036705, 0.439795393281029])
+    # opt_2_unscaled = scaling(opt_2, bounds[:3,0], bounds[:3,1], 2)
+    # g_lin_2 = opt_2_unscaled[0] + opt_2_unscaled[2] - 201
 
-    opt_3 = np.array([0.340000000000000, 0.740000000000000, 0.730000000000000])
-    opt_3_unscaled = scaling(opt_3, bounds[:3,0], bounds[:3,1], 2)
-    g_lin_3 = opt_3_unscaled[0] + opt_3_unscaled[2] - 201
+    # opt_3 = np.array([0.340000000000000, 0.740000000000000, 0.730000000000000])
+    # opt_3_unscaled = scaling(opt_3, bounds[:3,0], bounds[:3,1], 2)
+    # g_lin_3 = opt_3_unscaled[0] + opt_3_unscaled[2] - 201
 
-    print('point #1: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2],g_lin_1))
-    print('point #2: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2],g_lin_2))
-    print('point #3: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2],g_lin_3))
+    # print('point #1: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_1_unscaled[0],opt_1_unscaled[1],opt_1_unscaled[2],g_lin_1))
+    # print('point #2: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_2_unscaled[0],opt_2_unscaled[1],opt_2_unscaled[2],g_lin_2))
+    # print('point #3: x1 = %f, x2 = %f, x3 = %f, g_lin = %f' %(opt_3_unscaled[0],opt_3_unscaled[1],opt_3_unscaled[2],g_lin_3))
 
-    points = np.vstack((opt_1,opt_2,opt_3))
+    # points = np.vstack((opt_1,opt_2,opt_3))
 
-    labels = ['$\mathtt{StoMADS-PB}$ V1, sample rate ($p^k$) = 10: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1[0],opt_1[1],opt_1[2]),
-              '$\mathtt{StoMADS-PB}$ V2, sample rate ($p^k$) = 5: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2[0],opt_2[1],opt_2[2]),
-              '$\mathtt{NOMAD}$ solution $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3[0],opt_3[1],opt_3[2])]
+    # labels = ['$\mathtt{StoMADS-PB}$ V1, sample rate ($p^k$) = 10: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_1[0],opt_1[1],opt_1[2]),
+    #           '$\mathtt{StoMADS-PB}$ V2, sample rate ($p^k$) = 5: $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_2[0],opt_2[1],opt_2[2]),
+    #           '$\mathtt{NOMAD}$ solution $\mathbf{x}_{\mathrm{scaled}} = [%.3g ~ %.3g ~ %.3g]^{\mathrm{T}}$' %(opt_3[0],opt_3[1],opt_3[2])]
 
     #===================================================================#
 
-    # New MCS
-    run = 0
-    # Resume MCS
-    # run = 3
-    # points = points[run:]
-    # labels = labels[run:]
+    handles_lgd = []; labels_lgd = [] # initialize legend
 
-    # terminate MCS
-    # run = 0
-    # run_end = 2 + 1
-    # points = points[run:run_end]
-    # labels = labels[run:run_end]
+    if new_run:
+        # New MCS
+        run = 0
+        # Resume MCS
+        # run = 3
+        # points = points[run:]
+        # labels = labels[run:]
+
+        # terminate MCS
+        # run = 3
+        # run_end = 3 + 1
+        # points = points[run:run_end]
+        # labels = labels[run:run_end]
+
 
     same_axis = True
     if same_axis:
@@ -397,7 +430,7 @@ if __name__ == '__main__':
     else:
         fig_nsafety = None
 
-    auto_limits = False
+    auto_limits = True
     if auto_limits:
         dataXLim = dataYLim = None
     else:
@@ -420,12 +453,19 @@ if __name__ == '__main__':
         data = mat['MCS_runs']
         data = data[:,0::]
         
-        label_name = u'Safety factor ($f(\mathbf{x};\mathbf{p}) = -n_\mathrm{safety}(\mathbf{x};\mathbf{p})$)'
+        # Legend entries
+        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor=colors[run], facecolor=colors[run], fill='None' ,alpha=0.5)
+        
+        handles_lgd += [a]
+        labels_lgd += [legend_label]
+
+        label_name = u'Stochastic objective function ($\hat{f}_{\mathbf{P}}(\mathbf{x})$)'
         fun_name = 'nsafety'
 
         dataXLim_out, dataYLim_out, mean_nsafety, std_nsafety = plot_distribution(data, fun_name, label_name, n_bins, run, 
             fig_swept = fig_nsafety, run_label = legend_label, color = colors[run], 
-            dataXLim = dataXLim, dataYLim = dataYLim)
+            dataXLim = dataXLim, dataYLim = dataYLim, 
+            fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_nsafety_runs += [mean_nsafety]
         std_nsafety_runs += [std_nsafety]
