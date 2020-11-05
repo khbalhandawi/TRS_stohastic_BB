@@ -134,7 +134,7 @@ def make_pdf(dist, params, size=10000):
 
 def plot_distribution(data, fun_name, label_name, n_bins, run, 
                       discrete = False, min_bin_width = 0, 
-                      fig_swept = None, run_label = 'PDF', color = u'b',
+                      fig_swept = None, run_label = 'PDF', color = u'b', hatch_pattern = u'',
                       dataXLim = None, dataYLim = None, constraint = None,
                       fit_distribution = True, handles = [], labels = []):
     
@@ -217,9 +217,13 @@ def plot_distribution(data, fun_name, label_name, n_bins, run,
 
     if discrete:
         # discrete bin numbers
-        ax2.hist(data, bins, color = color, alpha=0.5, density=True)
+        # ax2.hist(data, bins, color = color, alpha=0.5, label = 'data', density=True)
+        ax2.hist(data, bins, linewidth=2, facecolor=color, 
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
     else:
-        ax2.hist(data, bins = n_bins, color = color, alpha=0.5, density=True)
+        # ax2.hist(data, bins = n_bins, color = color, alpha=0.5, label = 'data', density=True)
+        ax2.hist(data, bins = n_bins, facecolor=color, 
+                 hatch=hatch_pattern, edgecolor='k',fill=True, density=True)
 
     # plot constraint limits
     if constraint is not None:
@@ -275,6 +279,7 @@ if __name__ == '__main__':
 
 
     fit_cond = False # Do not fit data
+    color_mode = 'color' # Choose color mode (black_White)
     run = 0 # starting point
 
     #===================================================================#
@@ -426,11 +431,11 @@ if __name__ == '__main__':
 
     same_axis = True
     if same_axis:
-        fig_nsafety = plt.figure(figsize=(10,5))
+        fig_nsafety = plt.figure(figsize=(6,5))
     else:
         fig_nsafety = None
 
-    auto_limits = True
+    auto_limits = False
     if auto_limits:
         dataXLim = dataYLim = None
     else:
@@ -444,7 +449,13 @@ if __name__ == '__main__':
     mpl.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}',
                                             r'\usepackage{amssymb}']
     mpl.rcParams['font.family'] = 'serif'
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
+
+    if color_mode == 'color':
+        hatches = ['/'] * 10
+        colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] # ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', ...]
+    elif color_mode == 'black_white':
+        hatches = ['/','//','x','o','|||']
+        colors = ['#FFFFFF'] * 10
 
     for point,legend_label in zip(points,labels):
 
@@ -454,8 +465,8 @@ if __name__ == '__main__':
         data = data[:,0::]
         
         # Legend entries
-        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor=colors[run], facecolor=colors[run], fill='None' ,alpha=0.5)
-        
+        a = patches.Rectangle((20,20), 20, 20, linewidth=1, edgecolor='k', facecolor=colors[run], fill=True ,hatch=hatches[run])
+
         handles_lgd += [a]
         labels_lgd += [legend_label]
 
@@ -464,7 +475,7 @@ if __name__ == '__main__':
 
         dataXLim_out, dataYLim_out, mean_nsafety, std_nsafety = plot_distribution(data, fun_name, label_name, n_bins, run, 
             fig_swept = fig_nsafety, run_label = legend_label, color = colors[run], 
-            dataXLim = dataXLim, dataYLim = dataYLim, 
+            hatch_pattern = hatches[run], dataXLim = dataXLim, dataYLim = dataYLim, 
             fit_distribution = fit_cond, handles = handles_lgd, labels = labels_lgd)
 
         mean_nsafety_runs += [mean_nsafety]
