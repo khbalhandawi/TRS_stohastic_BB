@@ -15,8 +15,7 @@ function [f] = TRS_BB(x,sur,p)
     upb_v = p{3};
     lob_p = p{4};
     upb_p = p{5};
-    Total_width = p{6};
-    T_melt = p{7};
+    T_melt = p{6};
     
     lob = [lob_v lob_p]'; upb = [upb_v upb_p]';  
     
@@ -41,7 +40,7 @@ function [f] = TRS_BB(x,sur,p)
     %      T_melt - f5, ...
     %      cstr];
      
-    cstr = x(1) + x(3) - Total_width;
+    cstr = x(1) + x(3) - P_random(5);
     f1 = Z(1);
     f = [-f1, ...
          cstr];

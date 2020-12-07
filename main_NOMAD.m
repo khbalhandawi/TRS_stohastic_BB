@@ -32,12 +32,12 @@ bounds = [45.0           , 155.0                    ;... % Axial Position
           -100.0         , 100.0                    ;... % T3
           -100.0         , 100.0                    ];   % T4
 
-load('DOE_V1.mat','ax_pos','st_height','st_width','T1_n','T2_n','T3_n','T4_n','N_th','n_f_th');
+load('DOE_V1.mat','ax_pos','st_height','st_width','laser_power','T1_n','T2_n','T3_n','T4_n','shroud_width','N_th','n_f_th');
 lb = bounds(:,1)'; ub = bounds(:,2)';
 lob_v = bounds(1:3,1)'; upb_v = bounds(1:3,2)';
 lob_p = bounds(4:end,1)'; upb_p = bounds(4:end,2)';
 
-lhs_data = [ax_pos, st_height, st_width, T1_n, T2_n, T3_n, T4_n];
+lhs_data = [ax_pos, st_height, st_width, laser_power, T1_n, T2_n, T3_n, T4_n, shroud_width];
 lhs_data_normalize = scaling(lhs_data,lb,ub,1);
 
 obj_data = [n_f_th]';
@@ -71,7 +71,7 @@ ub_n = ones(size(lob_v)); % upper bounds for NOMAD
 x0 = 0.5 * ones(size(lob_v));  % <--------------------------------------------------------- SET INITIAL GUESS HERE
 
 index = 0; % Initialize counter
-param = {index,lob_v,upb_v,lob_p,upb_p,shroud_width,T_melt};
+param = {index,lob_v,upb_v,lob_p,upb_p,T_melt};
 
 %% Blackbox call
 % f = TRS_BB(x0,param)

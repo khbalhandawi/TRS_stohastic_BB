@@ -14,9 +14,11 @@ import pickle
 #==============================================================================#
 # SCALING BY A RANGE
 def scaling(x,l,u,operation):
-    # scaling() scales or unscales the vector x according to the bounds
-    # specified by u and l. The flag type indicates whether to scale (1) or
-    # unscale (2) x. Vectors must all have the same dimension.
+    ''' 
+    scaling() scales or unscales the vector x according to the bounds
+    specified by u and l. The flag type indicates whether to scale (1) or
+    unscale (2) x. Vectors must all have the same dimension.
+    '''
     
     if operation == 1:
         # scale
